@@ -2,6 +2,7 @@ package routes
 
 import (
 	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/delivery/http/handler"
+	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/middleware"
 	"github.com/gin-gonic/gin"
 )
 
@@ -16,5 +17,11 @@ func RegisterRoutes(r *gin.Engine, authHandler *handler.UserHandler) {
 
 	api.POST("/register", authHandler.Register)
 	api.POST("/login", authHandler.Login)
+
+	// protected group
+	protected := api.Group("/")
+	protected.Use(middleware.JWTMiddleware())
+
+	protected.POST("/generate-api-key", authHandler.GenerateAPIKey)
 
 }

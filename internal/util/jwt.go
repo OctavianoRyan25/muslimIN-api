@@ -1,13 +1,13 @@
 package util
 
 import (
-	"os"
+	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var jwtSecret = []byte(os.Getenv("SECRET_KEY"))
+var jwtSecret = []byte("AMBASING")
 
 func GenerateJWT(userID uint) (string, error) {
 
@@ -22,7 +22,12 @@ func GenerateJWT(userID uint) (string, error) {
 }
 
 func ValidateJWT(tokenString string) (*jwt.Token, error) {
+	fmt.Println("Memulai validasi untuk token:", tokenString)
 	return jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		fmt.Println("SECRET:", string(jwtSecret))
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, jwt.ErrSignatureInvalid
+		}
 		return jwtSecret, nil
-	})
+	}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
 }

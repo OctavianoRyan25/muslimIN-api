@@ -33,6 +33,7 @@ func InitDatabase(cfg *config.Config) *gorm.DB {
 
 	err = db.AutoMigrate(
 		&domain.User{},
+		&domain.APIKey{},
 	)
 
 	if err != nil {

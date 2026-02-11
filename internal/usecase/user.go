@@ -13,6 +13,7 @@ type UserUseCase interface {
 	GetUserByEmail(email string) (*domain.User, error)
 	CreateUser(user *domain.User) error
 	LoginUser(user *domain.User) (string, error)
+	CreateAPIKey(userID uint) (*domain.APIKey, error)
 }
 
 type userUseCase struct {
