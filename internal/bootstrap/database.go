@@ -1,6 +1,7 @@
 package bootstrap
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -11,6 +12,7 @@ import (
 	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/domain"
 	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/public"
 	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/repository"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -49,16 +51,12 @@ func InitDatabase(cfg *config.Config) *gorm.DB {
 
 	log.Println("Auto migration completed")
 
-	if err := seedDoa(db); err != nil {
-		log.Printf("Gagal seeding: %v", err)
-	}
-
 	return db
 }
 
-func seedDoa(db *gorm.DB) error {
-	repo := repository.NewDoaRepository(db)
-	count, err := repo.CountDoa()
+func seedDoa(db *gorm.DB, redis *redis.Client, ctx context.Context) error {
+	repo := repository.NewDoaRepository(db, redis)
+	count, err := repo.CountDoa(ctx)
 
 	if err != nil {
 		return fmt.Errorf("gagal menghitung data doa: %w", err)

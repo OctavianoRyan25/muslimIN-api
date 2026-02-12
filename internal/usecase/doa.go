@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"errors"
 
 	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/domain"
@@ -10,7 +11,7 @@ import (
 type DoaUseCase interface {
 	GetAll() ([]domain.Doa, error)
 	GetById(id uint) (*domain.Doa, error)
-	GetRandom() (*domain.Doa, error)
+	GetRandom(ctx context.Context) (*domain.Doa, error)
 }
 
 type doaUseCase struct {
@@ -30,6 +31,6 @@ func (u *doaUseCase) GetById(id uint) (*domain.Doa, error) {
 	}
 	return u.repo.GetById(id)
 }
-func (u *doaUseCase) GetRandom() (*domain.Doa, error) {
-	return u.repo.GetRandom()
+func (u *doaUseCase) GetRandom(ctx context.Context) (*domain.Doa, error) {
+	return u.repo.GetRandom(ctx)
 }

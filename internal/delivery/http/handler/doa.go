@@ -43,7 +43,7 @@ func (h *DoaHandler) GetById(c *gin.Context) {
 }
 
 func (h *DoaHandler) GetRandom(c *gin.Context) {
-	doa, err := h.useCase.GetRandom()
+	doa, err := h.useCase.GetRandom(c)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return

@@ -17,6 +17,12 @@ type Config struct {
 	DBName     string
 }
 
+type Redis struct {
+	Addr     string
+	Password string
+	DB       uint
+}
+
 func LoadConfig() *Config {
 	err := godotenv.Load()
 
@@ -32,5 +38,13 @@ func LoadConfig() *Config {
 		DBUser:     os.Getenv("DB_USER"),
 		DBPassword: os.Getenv("DB_PASSWORD"),
 		DBName:     os.Getenv("DB_NAME"),
+	}
+}
+
+func LoadRedis() *Redis {
+	return &Redis{
+		Addr:     "localhost:6379",
+		Password: "",
+		DB:       0,
 	}
 }

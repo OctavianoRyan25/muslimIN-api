@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 
 	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/bootstrap"
@@ -8,7 +9,9 @@ import (
 )
 
 func main() {
-	app := bootstrap.NewApp()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	app := bootstrap.NewApp(ctx)
 
 	routes.RegisterRoutes(app.Engine, app.Modules.AuthHandler, app.Modules.DoaHandler)
 
