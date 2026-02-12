@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterRoutes(r *gin.Engine, authHandler *handler.UserHandler) {
+func RegisterRoutes(r *gin.Engine, authHandler *handler.UserHandler, doaHandler *handler.DoaHandler) {
 	api := r.Group("/api")
 
 	api.GET("/health", func(c *gin.Context) {
@@ -23,5 +23,10 @@ func RegisterRoutes(r *gin.Engine, authHandler *handler.UserHandler) {
 	protected.Use(middleware.JWTMiddleware())
 
 	protected.POST("/generate-api-key", authHandler.GenerateAPIKey)
+
+	protedtedApiKey := api.Group("/")
+	protedtedApiKey.GET("/doa", doaHandler.GetAll)
+	protedtedApiKey.GET("/doa/:id", doaHandler.GetById)
+	protedtedApiKey.GET("/doa/random", doaHandler.GetRandom)
 
 }

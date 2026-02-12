@@ -1,11 +1,16 @@
 package bootstrap
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/config"
+	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/delivery/http/request"
 	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/domain"
+	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/public"
+	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/repository"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -31,9 +36,11 @@ func InitDatabase(cfg *config.Config) *gorm.DB {
 
 	log.Println("Database connected")
 
+	// AutoMigrate
 	err = db.AutoMigrate(
 		&domain.User{},
 		&domain.APIKey{},
+		&domain.Doa{},
 	)
 
 	if err != nil {
@@ -42,5 +49,51 @@ func InitDatabase(cfg *config.Config) *gorm.DB {
 
 	log.Println("Auto migration completed")
 
+	if err := seedDoa(db); err != nil {
+		log.Printf("Gagal seeding: %v", err)
+	}
+
 	return db
+}
+
+func seedDoa(db *gorm.DB) error {
+	repo := repository.NewDoaRepository(db)
+	count, err := repo.CountDoa()
+
+	if err != nil {
+		return fmt.Errorf("gagal menghitung data doa: %w", err)
+	}
+
+	if count > 0 {
+		log.Print("Nothing to Seed")
+		return nil
+	}
+
+	// processed Seeding
+	log.Print("Seeding data dari JSON...")
+
+	var doaReqs []request.Doa
+	err = json.Unmarshal(public.DoaJSON, &doaReqs)
+	if err != nil {
+		return fmt.Errorf("gagal unmarshal JSON: %w", err)
+	}
+
+	var doas []domain.Doa
+	for _, v := range doaReqs {
+		doas = append(doas, domain.Doa{
+			Nama:          v.Nama,
+			Lafal:         v.Lafal,
+			Transliterasi: v.Transliterasi,
+			Arti:          v.Arti,
+			Riwayat:       v.Riwayat,
+			Keterangan:    &v.Keterangan,
+			KataKunci:     strings.Join(v.KataKunci, ","),
+		})
+	}
+	if err := db.Create(&doas).Error; err != nil {
+		return fmt.Errorf("gagal menyimpan data seed ke database: %w", err)
+	}
+
+	log.Printf("Berhasil seeding %d data doa.", len(doas))
+	return nil
 }

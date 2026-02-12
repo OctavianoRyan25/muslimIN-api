@@ -10,7 +10,7 @@ import (
 func main() {
 	app := bootstrap.NewApp()
 
-	routes.RegisterRoutes(app.Engine, app.Modules.AuthHandler)
+	routes.RegisterRoutes(app.Engine, app.Modules.AuthHandler, app.Modules.DoaHandler)
 
 	log.Printf("Server running on port %s", "8080")
 	app.Engine.Run(":8080")

@@ -17,16 +17,24 @@ type App struct {
 
 type Modules struct {
 	AuthHandler *handler.UserHandler
+	DoaHandler  *handler.DoaHandler
 }
 
+// Init Module
 func InitModules(db *gorm.DB) *Modules {
-	// Init Module
+	// Auth Module
 	userRepo := repository.NewUserRepository(db)
 	userUseCase := usecase.NewUserUseCase(userRepo)
 	userHandler := handler.NewUserHandler(userUseCase)
 
+	// DoaModule
+	doaRepo := repository.NewDoaRepository(db)
+	doaUseCase := usecase.NewDoaUsecase(doaRepo)
+	doaHandler := handler.NewDoaUsecase(doaUseCase)
+
 	return &Modules{
 		AuthHandler: userHandler,
+		DoaHandler:  doaHandler,
 	}
 }
 
