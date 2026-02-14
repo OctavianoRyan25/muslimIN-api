@@ -20,7 +20,8 @@ func NewDoaUsecase(useCase usecase.DoaUseCase) *DoaHandler {
 
 func (h *DoaHandler) GetAll(c *gin.Context) {
 	var res []response.Doa
-	doas, err := h.useCase.GetAll()
+	ctx := c.Request.Context()
+	doas, err := h.useCase.GetAll(ctx)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -43,7 +44,8 @@ func (h *DoaHandler) GetById(c *gin.Context) {
 }
 
 func (h *DoaHandler) GetRandom(c *gin.Context) {
-	doa, err := h.useCase.GetRandom(c)
+	ctx := c.Request.Context()
+	doa, err := h.useCase.GetRandom(ctx)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return

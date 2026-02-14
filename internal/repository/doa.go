@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"math/rand"
 	"strconv"
@@ -13,7 +14,7 @@ import (
 )
 
 type DoaRepository interface {
-	GetAll() ([]domain.Doa, error)
+	GetAll(context.Context) ([]domain.Doa, error)
 	GetById(id uint) (*domain.Doa, error)
 	GetRandom(context.Context) (*domain.Doa, error)
 	CountDoa(context.Context) (uint, error)
@@ -31,11 +32,29 @@ func NewDoaRepository(db *gorm.DB, redis *redis.Client) DoaRepository {
 	}
 }
 
-func (r *doaRepo) GetAll() ([]domain.Doa, error) {
+func (r *doaRepo) GetAll(ctx context.Context) ([]domain.Doa, error) {
 	var doas []domain.Doa
-	if err := r.db.Find(&doas).Error; err != nil {
+	cacheKey := "doa:all"
+	val, err := r.redis.Get(ctx, cacheKey).Result()
+	if err == nil {
+		err := json.Unmarshal([]byte(val), &doas)
+		if err == nil {
+			log.Println("GetAll: Mengambil data dari Redis (Cache Hit)")
+			return doas, nil
+		}
+	}
+
+	if err := r.db.WithContext(ctx).Find(&doas).Error; err != nil {
 		return nil, err
 	}
+
+	jsonData, err := json.Marshal(doas)
+	if err == nil {
+		// Set cache dengan TTL (misal 1 jam)
+		r.redis.Set(ctx, cacheKey, jsonData, 1*time.Hour)
+		log.Println("GetAll: Menyimpan data ke Redis")
+	}
+
 	return doas, nil
 }
 

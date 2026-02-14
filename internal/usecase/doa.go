@@ -9,7 +9,7 @@ import (
 )
 
 type DoaUseCase interface {
-	GetAll() ([]domain.Doa, error)
+	GetAll(context.Context) ([]domain.Doa, error)
 	GetById(id uint) (*domain.Doa, error)
 	GetRandom(ctx context.Context) (*domain.Doa, error)
 }
@@ -22,8 +22,8 @@ func NewDoaUsecase(repo repository.DoaRepository) DoaUseCase {
 	return &doaUseCase{repo: repo}
 }
 
-func (u *doaUseCase) GetAll() ([]domain.Doa, error) {
-	return u.repo.GetAll()
+func (u *doaUseCase) GetAll(ctx context.Context) ([]domain.Doa, error) {
+	return u.repo.GetAll(ctx)
 }
 func (u *doaUseCase) GetById(id uint) (*domain.Doa, error) {
 	if id == 0 {
