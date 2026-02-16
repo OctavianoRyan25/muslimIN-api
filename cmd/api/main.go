@@ -13,7 +13,7 @@ func main() {
 	defer cancel()
 	app := bootstrap.NewApp(ctx)
 
-	routes.RegisterRoutes(app.Engine, app.Modules.AuthHandler, app.Modules.DoaHandler)
+	routes.RegisterRoutes(app.Engine, app.Modules.AuthHandler, app.Modules.DoaHandler, app.Modules.JadwalSholatHandler)
 
 	log.Printf("Server running on port %s", "8080")
 	app.Engine.Run(":8080")

@@ -5,8 +5,10 @@ import (
 	"log"
 
 	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/config"
+	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/cron"
 	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/delivery/http/handler"
 	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/repository"
+	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/seed"
 	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/usecase"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
@@ -20,8 +22,9 @@ type App struct {
 }
 
 type Modules struct {
-	AuthHandler *handler.UserHandler
-	DoaHandler  *handler.DoaHandler
+	AuthHandler         *handler.UserHandler
+	DoaHandler          *handler.DoaHandler
+	JadwalSholatHandler *handler.JadwalSholatHandler
 }
 
 // Init Module
@@ -36,9 +39,15 @@ func InitModules(db *gorm.DB, redis *redis.Client) *Modules {
 	doaUseCase := usecase.NewDoaUsecase(doaRepo)
 	doaHandler := handler.NewDoaUsecase(doaUseCase)
 
+	// JadwalSholat Module
+	jadwalSholatRepo := repository.NewJadwalSholatRepository(db)
+	jadwalSholatUseCase := usecase.NewJadwalSholatuseCase(jadwalSholatRepo)
+	jadwalSholatHandler := handler.NewJadwalSholatHandler(jadwalSholatUseCase)
+
 	return &Modules{
-		AuthHandler: userHandler,
-		DoaHandler:  doaHandler,
+		AuthHandler:         userHandler,
+		DoaHandler:          doaHandler,
+		JadwalSholatHandler: jadwalSholatHandler,
 	}
 }
 
@@ -49,11 +58,18 @@ func NewApp(ctx context.Context) *App {
 	db := InitDatabase(cfg)
 	redis, err := InitRedis(cfgRedis)
 
+	cron := cron.NewCronJob(db)
+	cron.Start()
+
 	if err != nil {
 		log.Fatal("Failed to connect to Redis:", err)
 	}
 
 	if err := seedDoa(db, redis, ctx); err != nil {
+		log.Printf("Seed error: %v", err)
+	}
+
+	if err := seed.SeedCities(db); err != nil {
 		log.Printf("Seed error: %v", err)
 	}
 

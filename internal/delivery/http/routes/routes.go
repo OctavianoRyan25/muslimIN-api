@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterRoutes(r *gin.Engine, authHandler *handler.UserHandler, doaHandler *handler.DoaHandler) {
+func RegisterRoutes(r *gin.Engine, authHandler *handler.UserHandler, doaHandler *handler.DoaHandler, jadwalSholatHandler *handler.JadwalSholatHandler) {
 	api := r.Group("/api")
 
 	api.GET("/health", func(c *gin.Context) {
@@ -24,9 +24,11 @@ func RegisterRoutes(r *gin.Engine, authHandler *handler.UserHandler, doaHandler 
 
 	protected.POST("/generate-api-key", authHandler.GenerateAPIKey)
 
-	protedtedApiKey := api.Group("/")
-	protedtedApiKey.GET("/doa", doaHandler.GetAll)
-	protedtedApiKey.GET("/doa/:id", doaHandler.GetById)
-	protedtedApiKey.GET("/doa/random", doaHandler.GetRandom)
+	protecdtedApiKey := api.Group("/")
+	protecdtedApiKey.GET("/doa", doaHandler.GetAll)
+	protecdtedApiKey.GET("/doa/:id", doaHandler.GetById)
+	protecdtedApiKey.GET("/doa/random", doaHandler.GetRandom)
+
+	protecdtedApiKey.GET("/jadwal-sholat-today", jadwalSholatHandler.GetToday)
 
 }
