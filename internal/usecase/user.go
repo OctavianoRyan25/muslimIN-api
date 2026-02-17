@@ -2,9 +2,11 @@ package usecase
 
 import (
 	"errors"
+	"log"
 	"time"
 
 	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/domain"
+	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/infrastructure/messaging"
 	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/repository"
 	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/util"
 )
@@ -17,11 +19,15 @@ type UserUseCase interface {
 }
 
 type userUseCase struct {
-	repo repository.UserRepository
+	repo     repository.UserRepository
+	rabbitmq messaging.EmailPublisherHandler
 }
 
-func NewUserUseCase(repo repository.UserRepository) UserUseCase {
-	return &userUseCase{repo: repo}
+func NewUserUseCase(repo repository.UserRepository, rabbitmq messaging.EmailPublisherHandler) UserUseCase {
+	return &userUseCase{
+		repo:     repo,
+		rabbitmq: rabbitmq,
+	}
 }
 
 func (uu *userUseCase) GetUserByEmail(email string) (*domain.User, error) {
@@ -41,6 +47,16 @@ func (uu *userUseCase) CreateUser(user *domain.User) error {
 	if user.Password == "" {
 		return errors.New("password is required")
 	}
+
+	valid, err := uu.repo.GetUserByEmail(user.Email)
+	if err != nil {
+		return err
+	}
+
+	if valid != nil && valid.Name != "" {
+		return errors.New("user already registered")
+	}
+
 	hashed, err := util.HashPassword(user.Password)
 	if err != nil {
 		return err
@@ -48,7 +64,21 @@ func (uu *userUseCase) CreateUser(user *domain.User) error {
 
 	user.Password = hashed
 
-	return uu.repo.CreateUser(user)
+	err = uu.repo.CreateUser(user)
+
+	emailTask := domain.EmailMessage{
+		To:      user.Email,
+		Subject: "Selamat Datang!",
+		Body:    "Akun Anda berhasil dibuat.",
+	}
+
+	err = uu.rabbitmq.Publish(emailTask)
+
+	if err != nil {
+		log.Printf("Gagal mengirim ke queue: %v", err)
+	}
+
+	return err
 }
 
 func (uu *userUseCase) LoginUser(user *domain.User) (string, error) {

@@ -15,7 +15,7 @@ type EmailPublisher struct {
 	channel *amqp091.Channel
 }
 
-func NewEmailPublisher(ch *amqp091.Channel) *EmailPublisher {
+func NewEmailPublisher(ch *amqp091.Channel) EmailPublisherHandler {
 	return &EmailPublisher{
 		channel: ch,
 	}
@@ -29,8 +29,8 @@ func (p *EmailPublisher) Publish(message domain.EmailMessage) error {
 	}
 
 	return p.channel.Publish(
-		"",            // exchange
-		"email_queue", // routing key
+		"",
+		"email_queue",
 		false,
 		false,
 		amqp091.Publishing{

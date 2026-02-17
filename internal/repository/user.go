@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"errors"
+
 	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/domain"
 	"gorm.io/gorm"
 )
@@ -22,6 +24,9 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 func (ur *userRepo) GetUserByEmail(email string) (*domain.User, error) {
 	var user domain.User
 	if err := ur.db.Where("email = ?", email).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	return &user, nil

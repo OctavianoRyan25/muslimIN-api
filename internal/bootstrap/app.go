@@ -5,8 +5,8 @@ import (
 	"log"
 
 	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/config"
-	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/cron"
 	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/delivery/http/handler"
+	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/infrastructure/messaging"
 	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/repository"
 	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/seed"
 	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/usecase"
@@ -16,9 +16,10 @@ import (
 )
 
 type App struct {
-	Engine  *gin.Engine
-	DB      *gorm.DB
-	Modules *Modules
+	Engine   *gin.Engine
+	DB       *gorm.DB
+	Modules  *Modules
+	RabbitMQ *messaging.RabbitMQ
 }
 
 type Modules struct {
@@ -28,10 +29,10 @@ type Modules struct {
 }
 
 // Init Module
-func InitModules(db *gorm.DB, redis *redis.Client) *Modules {
+func InitModules(db *gorm.DB, redis *redis.Client, rabbitmq messaging.EmailPublisherHandler) *Modules {
 	// Auth Module
 	userRepo := repository.NewUserRepository(db)
-	userUseCase := usecase.NewUserUseCase(userRepo)
+	userUseCase := usecase.NewUserUseCase(userRepo, rabbitmq)
 	userHandler := handler.NewUserHandler(userUseCase)
 
 	// DoaModule
@@ -58,12 +59,20 @@ func NewApp(ctx context.Context) *App {
 	db := InitDatabase(cfg)
 	redis, err := InitRedis(cfgRedis)
 
-	cron := cron.NewCronJob(db)
-	cron.Start()
-
 	if err != nil {
 		log.Fatal("Failed to connect to Redis:", err)
 	}
+
+	// cron := cron.NewCronJob(db)
+	// cron.Start()
+
+	rabbitmq, err := messaging.NewRabbitMQ("amqp://guest:guest@localhost:5672/")
+
+	if err != nil {
+		log.Fatal("Failed to connect to RabbitMQ:", err)
+	}
+
+	publisher := messaging.NewEmailPublisher(rabbitmq.Channel)
 
 	if err := seedDoa(db, redis, ctx); err != nil {
 		log.Printf("Seed error: %v", err)
@@ -76,8 +85,9 @@ func NewApp(ctx context.Context) *App {
 	engine := gin.Default()
 
 	return &App{
-		Engine:  engine,
-		DB:      db,
-		Modules: InitModules(db, redis),
+		Engine:   engine,
+		DB:       db,
+		Modules:  InitModules(db, redis, publisher),
+		RabbitMQ: rabbitmq,
 	}
 }

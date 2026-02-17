@@ -38,3 +38,12 @@ func NewRabbitMQ(url string) (*RabbitMQ, error) {
 		Channel: ch,
 	}, nil
 }
+
+func (r *RabbitMQ) Close() {
+	if r.Channel != nil {
+		r.Channel.Close()
+	}
+	if r.Conn != nil {
+		r.Conn.Close()
+	}
+}
