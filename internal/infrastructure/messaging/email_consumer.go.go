@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 
+	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/infrastructure/mail"
 	"github.com/rabbitmq/amqp091-go"
 )
 
@@ -16,11 +17,13 @@ type EmailPayload struct {
 
 type EmailConsumer struct {
 	channel *amqp091.Channel
+	mail    mail.UserMail
 }
 
-func NewEmailConsumer(ch *amqp091.Channel) *EmailConsumer {
+func NewEmailConsumer(ch *amqp091.Channel, mail mail.UserMail) *EmailConsumer {
 	return &EmailConsumer{
 		channel: ch,
+		mail:    mail,
 	}
 }
 
@@ -56,13 +59,15 @@ func (c *EmailConsumer) Start(ctx context.Context) error {
 			}
 
 			// Simulasi kirim email (sementara pakai log)
-			log.Printf("[EmailConsumer] Send Email -> To: %s | Subject: %s",
-				payload.To, payload.Subject)
-
-			log.Printf("[EmailConsumer] Body: %s", payload.Body)
-
-			// Ack = sukses diproses
-			msg.Ack(false)
+			err := c.mail.SendEmailToUser([]string{payload.To}, payload.Subject, payload.Body)
+			if err != nil {
+				log.Printf("Gagal kirim email: %v", err)
+				msg.Nack(false, true)
+				continue
+			} else {
+				log.Printf("Success sending email to %s", payload.To)
+				msg.Ack(false) // Tandai sukses
+			}
 		}
 	}
 }

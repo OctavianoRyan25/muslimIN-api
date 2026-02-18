@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/infrastructure/mail"
 	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/infrastructure/messaging"
 )
 
@@ -22,8 +23,11 @@ func main() {
 	}
 	defer mq.Close()
 
+	// Init SMTP
+	mailing := mail.NewSmtpMailer("test", 332, "test@gmail.com", "")
+
 	// Init Consumer
-	consumer := messaging.NewEmailConsumer(mq.Channel)
+	consumer := messaging.NewEmailConsumer(mq.Channel, mailing)
 
 	log.Println("Email Worker started...")
 
