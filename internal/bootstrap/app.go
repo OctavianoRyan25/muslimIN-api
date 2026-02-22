@@ -3,6 +3,7 @@ package bootstrap
 import (
 	"context"
 	"log"
+	"sync"
 
 	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/config"
 	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/delivery/http/handler"
@@ -74,13 +75,24 @@ func NewApp(ctx context.Context) *App {
 
 	publisher := messaging.NewEmailPublisher(rabbitmq.Channel)
 
-	if err := seedDoa(db, redis, ctx); err != nil {
-		log.Printf("Seed error: %v", err)
-	}
+	var wg sync.WaitGroup
+	wg.Add(2)
 
-	if err := seed.SeedCities(db); err != nil {
-		log.Printf("Seed error: %v", err)
-	}
+	go func() {
+		defer wg.Done()
+		if err := seedDoa(db, redis, ctx); err != nil {
+			log.Printf("Seed Doa error: %v", err)
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+		if err := seed.SeedCities(db); err != nil {
+			log.Printf("Seed Cities error: %v", err)
+		}
+	}()
+
+	wg.Wait()
 
 	engine := gin.Default()
 

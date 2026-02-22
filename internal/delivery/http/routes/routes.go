@@ -29,6 +29,6 @@ func RegisterRoutes(r *gin.Engine, authHandler *handler.UserHandler, doaHandler 
 	protecdtedApiKey.GET("/doa/:id", doaHandler.GetById)
 	protecdtedApiKey.GET("/doa/random", doaHandler.GetRandom)
 
-	protecdtedApiKey.GET("/jadwal-sholat-today", jadwalSholatHandler.GetToday)
-
+	protecdtedApiKey.GET("/jadwal-sholat-today/:city", jadwalSholatHandler.GetToday)
+	protecdtedApiKey.GET("/jadwal-sholat", jadwalSholatHandler.GetByDate)
 }

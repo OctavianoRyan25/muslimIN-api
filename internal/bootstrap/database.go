@@ -44,6 +44,7 @@ func InitDatabase(cfg *config.Config) *gorm.DB {
 		&domain.APIKey{},
 		&domain.Doa{},
 		&domain.JadwalSholat{},
+		&domain.City{},
 	)
 
 	if err != nil {
