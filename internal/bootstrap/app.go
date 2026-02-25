@@ -27,6 +27,7 @@ type Modules struct {
 	AuthHandler         *handler.UserHandler
 	DoaHandler          *handler.DoaHandler
 	JadwalSholatHandler *handler.JadwalSholatHandler
+	CityHandler         *handler.CityHandler
 }
 
 // Init Module
@@ -46,10 +47,16 @@ func InitModules(db *gorm.DB, redis *redis.Client, rabbitmq messaging.EmailPubli
 	jadwalSholatUseCase := usecase.NewJadwalSholatuseCase(jadwalSholatRepo)
 	jadwalSholatHandler := handler.NewJadwalSholatHandler(jadwalSholatUseCase)
 
+	// City Module
+	cityRepo := repository.NewCityRepository(db, redis)
+	cityUseCase := usecase.NewCityUsecase(cityRepo)
+	cityHandler := handler.NewCityHandler(cityUseCase)
+
 	return &Modules{
 		AuthHandler:         userHandler,
 		DoaHandler:          doaHandler,
 		JadwalSholatHandler: jadwalSholatHandler,
+		CityHandler:         cityHandler,
 	}
 }
 
