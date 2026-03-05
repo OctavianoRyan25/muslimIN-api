@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log"
 	"math/rand"
 	"strconv"
@@ -72,6 +73,9 @@ func (r *doaRepo) GetRandom(ctx context.Context) (*domain.Doa, error) {
 	if err != nil {
 		return nil, err
 	}
+	if random == 0 {
+		return nil, errors.New("no doa available")
+	}
 	id := rand.Intn(int(random))
 
 	var doa domain.Doa
@@ -85,7 +89,9 @@ func (r *doaRepo) CountDoa(ctx context.Context) (uint, error) {
 	val, err := r.redis.Get(ctx, "doa:count").Result()
 	if err == nil {
 		count, _ := strconv.Atoi(val)
-		return uint(count), nil
+		if count > 0 {
+			return uint(count), nil
+		}
 	}
 
 	var count int64
@@ -93,9 +99,11 @@ func (r *doaRepo) CountDoa(ctx context.Context) (uint, error) {
 		return 0, err
 	}
 
-	err = r.redis.Set(ctx, "doa:count", count, 24*time.Hour).Err()
-	if err != nil {
-		log.Printf("Gagal menyimpan cache ke Redis: %v", err)
+	if count > 0 {
+		err = r.redis.Set(ctx, "doa:count", count, 24*time.Hour).Err()
+		if err != nil {
+			log.Printf("Gagal menyimpan cache ke Redis: %v", err)
+		}
 	}
 
 	return uint(count), nil

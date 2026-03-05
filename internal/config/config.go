@@ -18,7 +18,8 @@ type Config struct {
 }
 
 type Redis struct {
-	Addr     string
+	Host     string
+	Port     string
 	Password string
 	DB       uint
 }
@@ -43,7 +44,8 @@ func LoadConfig() *Config {
 
 func LoadRedis() *Redis {
 	return &Redis{
-		Addr:     "localhost:6379",
+		Host:     os.Getenv("REDIS_HOST"),
+		Port:     os.Getenv("REDIS_PORT"),
 		Password: "",
 		DB:       0,
 	}

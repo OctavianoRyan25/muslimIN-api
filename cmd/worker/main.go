@@ -17,14 +17,23 @@ func main() {
 	defer stop()
 
 	// Init RabbitMQ
-	mq, err := messaging.NewRabbitMQ("amqp://guest:guest@localhost:5672/")
+	url := os.Getenv("RABBITMQ_URL")
+	if url == "" {
+		log.Fatal("RABBITMQ_URL is not set")
+	}
+	mq, err := messaging.NewRabbitMQ(url)
 	if err != nil {
 		log.Fatal("RabbitMQ connection failed:", err)
 	}
 	defer mq.Close()
 
 	// Init SMTP
-	mailing := mail.NewSmtpMailer("test", 332, "test@gmail.com", "")
+	mailing := mail.NewSmtpMailer(
+		os.Getenv("SMTP_HOST"),
+		os.Getenv("SMTP_PORT"),
+		os.Getenv("SMTP_USER"),
+		os.Getenv("SMTP_PASS"),
+	)
 
 	// Init Consumer
 	consumer := messaging.NewEmailConsumer(mq.Channel, mailing)

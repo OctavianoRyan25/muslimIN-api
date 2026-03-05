@@ -2,6 +2,7 @@ package bootstrap
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/config"
@@ -9,8 +10,10 @@ import (
 )
 
 func InitRedis(cfg *config.Redis) (*redis.Client, error) {
+	addr := fmt.Sprintf("%s:%s", cfg.Host, cfg.Port)
+
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     cfg.Addr,
+		Addr:     addr,
 		Password: cfg.Password,
 		DB:       int(cfg.DB),
 	})

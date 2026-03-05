@@ -3,13 +3,16 @@ package bootstrap
 import (
 	"context"
 	"log"
+	"os"
 	"sync"
 
 	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/config"
+	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/cron"
 	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/delivery/http/handler"
 	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/infrastructure/messaging"
 	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/repository"
 	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/seed"
+	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/tasks"
 	"github.com/OctavianoRyan25/belajar-pattern-code-go/internal/usecase"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
@@ -71,10 +74,15 @@ func NewApp(ctx context.Context) *App {
 		log.Fatal("Failed to connect to Redis:", err)
 	}
 
-	// cron := cron.NewCronJob(db)
-	// cron.Start()
+	cron := cron.NewCronJob(db)
+	tasks.ExecuteMonthlySync(db)
+	cron.Start()
 
-	rabbitmq, err := messaging.NewRabbitMQ("amqp://guest:guest@localhost:5672/")
+	url := os.Getenv("RABBITMQ_URL")
+	if url == "" {
+		log.Fatal("RABBITMQ_URL is not set")
+	}
+	rabbitmq, err := messaging.NewRabbitMQ(url)
 
 	if err != nil {
 		log.Fatal("Failed to connect to RabbitMQ:", err)

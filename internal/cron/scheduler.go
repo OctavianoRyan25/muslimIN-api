@@ -7,7 +7,8 @@ import (
 )
 
 func (c *CronJob) RegisterTasks() {
-	_, err := c.Scheduler.AddFunc("@every 1m", func() {
+	// 1 monthly sync task
+	_, err := c.Scheduler.AddFunc("@monthly", func() {
 		fmt.Println("[Cron] Memulai sinkronisasi data bulanan...")
 
 		tasks.ExecuteMonthlySync(c.DB)
